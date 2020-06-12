@@ -1,17 +1,17 @@
+FROM mcr.microsoft.com/dotnet/core/aspnet:3.1 AS base
+WORKDIR /app
+
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS build
 WORKDIR /src
-COPY ReservaSala.App/*.csproj ReservaSala.App/
-RUN dotnet restore
 COPY . .
+RUN dotnet restore 
+RUN dotnet build --no-restore -c Release -o /app
 
-# publish
 FROM build AS publish
-WORKDIR /src/ReservaSala.App
-RUN dotnet publish -c Release -o /src/publish
+RUN dotnet publish --no-restore -c Release -o /app
 
-FROM mcr.microsoft.com/dotnet/core/aspnet:3.1 AS runtime
+FROM base AS final
 WORKDIR /app
-COPY --from=publish /src/publish .
-# ENTRYPOINT ["dotnet", "Colors.API.dll"]
-# heroku uses the following
+COPY --from=publish /app .
+#ENTRYPOINT ["dotnet", "ReservaSala.App.dll"]
 CMD ASPNETCORE_URLS=http://*:$PORT dotnet ReservaSala.App.dll
